@@ -6,7 +6,7 @@ class GameWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("2D Shooter")
-        self.setFixedSize(800, 600)
+        self.setFixedSize(1600, 800)
 
         self.game_widget = GameWidget(self)
         self.setCentralWidget(self.game_widget)
