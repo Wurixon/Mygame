@@ -44,6 +44,8 @@ class Enemy:
     def __init__(self, x, y, speed):
         self.x = x
         self.y = y
+        self.current_x = x
+        self.current_y = y
         self.width = 32
         self.height = 32
         self.speed = speed
@@ -78,6 +80,8 @@ class Object:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.current_x = x
+        self.current_y = y
         self.width = 128
         self.height = 64
 
@@ -131,7 +135,9 @@ class GameWidget(QWidget):
         self.bullets = []
         self.enemies = []
         self.fences = []
+        self.objects = []
         self.dead_enemies = []
+        
 
         self.health = 100
         self.enemy_health = 100
@@ -144,12 +150,21 @@ class GameWidget(QWidget):
 
         self.last_shot_time = 0
 
-        self.enemy = Enemy(100, 100, 10)
-        self.fence = Object(100, -100)
-        self.tent = Object(-100, -100)
-        self.box = Object(-100, -300)
-        self.snipertower = Object(-100, -400)
-        self.gazebo = Object(-100, -500)
+        for i in range(1,5):
+            self.enemy = Enemy(i * 100, 100, 10)
+            self.enemies.append(self.enemy)
+        for i in range(1):
+            self.fence = Object(100, -100)
+            self.fences.append(self.fence)
+        for i in range(1):
+            self.tent = Object(-100, -100)
+            self.objects.append(self.tent)
+            self.box = Object(-100, -300)
+            self.objects.append(self.box)
+            self.snipertower = Object(-100, -400)
+            self.objects.append(self.snipertower)
+            self.gazebo = Object(-100, -500)
+            self.objects.append(self.gazebo)
 
         self.fireplace_textures = {
             "fireplace": QPixmap("objects/fireplace.png"),
@@ -229,23 +244,29 @@ class GameWidget(QWidget):
             camera_x = -self.camera_x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
             camera_y = -self.camera_y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            enemy_x = -self.enemy.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            enemy_y = -self.enemy.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for enemy in self.enemies:
+                enemy.current_x = -enemy.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                enemy.current_y = -enemy.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            fence_x = -self.fence.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            fence_y = -self.fence.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for fence in self.fences:
+                fence.current_x = -fence.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                fence.current_y = -fence.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            tent_x = -self.tent.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            tent_y = -self.tent.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for tent in self.objects:
+                tent.current_x = -tent.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                tent.current_y = -tent.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            box_x = -self.box.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            box_y = -self.box.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for box in self.objects:
+                box.current_x = -box.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                box.current_y = -box.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            snipertower_x = -self.snipertower.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            snipertower_y = -self.snipertower.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for snipertower in self.objects:
+                snipertower.current_x = -snipertower.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                snipertower.current_y = -snipertower.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
-            gazebo_x = -self.gazebo.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
-            gazebo_y = -self.gazebo.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
+            for gazebo in self.objects:
+                gazebo.current_x = -gazebo.x - self.player_x + self.width() / 2 - self.player_texture.width() / 2
+                gazebo.current_y = -gazebo.y - self.player_y + self.height() / 2 - self.player_texture.height() / 2
 
             # Зсування малювання на основі позиції камери
             painter.translate(int(camera_x), int(camera_y))
@@ -270,16 +291,17 @@ class GameWidget(QWidget):
                                self.player_texture)
 
             # Малювання ворога
-            if self.enemy_health <= 0:
-                transform = QTransform().translate(enemy_x, enemy_y)
-                painter.setTransform(transform)
-                painter.drawPixmap(self.dead_enemy_texture.width() // 2, self.dead_enemy_texture.height() // 2,
-                                   self.dead_enemy_texture)
-            else:
-                transform = QTransform().translate(enemy_x, enemy_y)
-                painter.setTransform(transform)
-                painter.drawPixmap(self.enemy_texture.width() // 2, self.enemy_texture.height() // 2,
-                                   self.enemy_texture)
+            for enemy in self.enemies:
+                if self.enemy.enemy_health <= 0:
+                    transform = QTransform().translate(enemy.current_x, enemy.current_y)
+                    painter.setTransform(transform)
+                    painter.drawPixmap(self.dead_enemy_texture.width() // 2, self.dead_enemy_texture.height() // 2,
+                                       self.dead_enemy_texture)
+                else:
+                    transform = QTransform().translate(enemy.current_x, enemy.current_y)
+                    painter.setTransform(transform)
+                    painter.drawPixmap(self.enemy_texture.width() // 2, self.enemy_texture.height() // 2,
+                                       self.enemy_texture)
 
             # Малювання куль
             for bullet in self.bullets:
@@ -289,34 +311,39 @@ class GameWidget(QWidget):
                                    self.bullet_texture)
 
             # Малювання паркану
-            transform = QTransform().translate(fence_x, fence_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.fence_texture.width() // 2, self.fence_texture.height() // 2,
-                                self.fence_texture)
+            for fence in self.fences:
+                transform = QTransform().translate(fence.current_x, fence.current_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.fence_texture.width() // 2, self.fence_texture.height() // 2,
+                                    self.fence_texture)
 
             # Малювання бесідки
-            transform = QTransform().translate(gazebo_x, gazebo_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.gazebo_texture.width() // 2, self.gazebo_texture.height() // 2,
-                               self.gazebo_texture)
+            for gazebo in self.objects:
+                transform = QTransform().translate(gazebo.current_x, gazebo.current_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.gazebo_texture.width() // 2, self.gazebo_texture.height() // 2,
+                                self.gazebo_texture)
 
             # Малювання намету
-            transform = QTransform().translate(tent_x, tent_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.tent_texture.width() // 2, self.tent_texture.height() // 2,
-                               self.tent_texture)
+            for tent in self.objects:
+                transform = QTransform().translate(tent.current_x, tent.current_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.tent_texture.width() // 2, self.tent_texture.height() // 2,
+                                   self.tent_texture)
 
             # Малювання коробки
-            transform = QTransform().translate(box_x, box_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.box_texture.width() // 2, self.box_texture.height() // 2,
-                               self.box_texture)
+            for box in self.objects:
+                transform = QTransform().translate(box.current_x, box.current_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.box_texture.width() // 2, self.box_texture.height() // 2,
+                                   self.box_texture)
 
             # Малювання снайперської вишки
-            transform = QTransform().translate(snipertower_x, snipertower_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.snipertower_texture.width() // 2, self.snipertower_texture.height() // 2,
-                               self.snipertower_texture)
+            for snipertower in self.objects:
+                transform = QTransform().translate(snipertower.current_x, snipertower.current_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.snipertower_texture.width() // 2, self.snipertower_texture.height() // 2,
+                                   self.snipertower_texture)
 
         except:
             pass
@@ -451,10 +478,10 @@ class GameWidget(QWidget):
         enemy_width = hitbox2[2]
         enemy_height = hitbox2[3]
 
-        if (player_x + player_width > enemy_x and
-                player_x < enemy_x + enemy_width and
-                player_y + player_height > enemy_y and
-                player_y < enemy_y + enemy_height):
+        if (player_x -32 < enemy_x + enemy_width and
+            player_x + player_width > enemy_x and
+            player_y -32 < enemy_y + enemy_height and
+            player_y + player_height > enemy_y):
             return True
         else:
             return False
@@ -465,7 +492,7 @@ class GameWidget(QWidget):
         for bullet in bullets_copy:
             bullet_hitbox = self.get_bullet_hitbox(bullet.x, bullet.y)  # Отримуємо хітбокс кулі
             for enemy in self.enemies:
-                enemy_hitbox = self.get_enemy_hitbox(enemy.x, enemy.y)  # Отримуємо хітбокс ворога
+                enemy_hitbox = self.get_enemy_hitbox(enemy.current_x, enemy.current_y)  # Отримуємо хітбокс ворога
                 if self.is_collide(bullet_hitbox, enemy_hitbox):  # Оновлений виклик функції
                     self.bullets.remove(bullet)
                     self.decrease_enemy_health(25)
@@ -473,10 +500,8 @@ class GameWidget(QWidget):
         # Перевірка зіткнень героя з ворогами
         player_hitbox = self.get_player_hitbox(self.player_x, self.player_y)  # Отримуємо хітбокс гравця
         for enemy in self.enemies:
-            enemy.x += enemy.speed_x  # Оновлення координат ворога по осі X
-            enemy.y += enemy.speed_y  # Оновлення координат ворога по осі Y
-            enemy_hitbox = self.get_enemy_hitbox(enemy.x, enemy.y)  # Отримуємо оновлений хітбокс ворога
-            if self.is_collide(player_hitbox, enemy_hitbox):  # Оновлений виклик функції
+            hitbox = self.get_enemy_hitbox(enemy.current_x, enemy.current_y)  # Отримуємо оновлений хітбокс ворога
+            if self.is_collide(player_hitbox, hitbox):  # Оновлений виклик функції
                 print('w')
                 self.decrease_health(random.randint(1, 10))  # Зменшуємо здоров'я гравця
                 self.decrease_enemy_health(random.randint(1, 10))  # Зменшуємо здоров'я ворога
