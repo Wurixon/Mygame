@@ -94,7 +94,6 @@ class Object:
         # Поворот паркану на 90 градусів
         self.width, self.height = self.height, self.width
 
-
 class GameWidget(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -151,6 +150,14 @@ class GameWidget(QWidget):
         self.box = Object(-100, -300)
         self.snipertower = Object(-100, -400)
         self.gazebo = Object(-100, -500)
+
+        self.fireplace_textures = {
+            "fireplace": QPixmap("objects/fireplace.png"),
+            "fireplace1": QPixmap("objects/fireplace1.png"),
+            "fireplace2": QPixmap("objects/fireplace2.png"),
+            "fireplace3": QPixmap("objects/fireplace3.png"),
+            "fireplace4": QPixmap("objects/fireplace4.png")
+        }
 
         self.health_textures = {
             "100hp": QPixmap("player/100hp.png"),
@@ -263,9 +270,16 @@ class GameWidget(QWidget):
                                self.player_texture)
 
             # Малювання ворога
-            transform = QTransform().translate(enemy_x, enemy_y)
-            painter.setTransform(transform)
-            painter.drawPixmap(self.enemy_texture.width() // 2, self.enemy_texture.height() // 2, self.enemy_texture)
+            if self.enemy_health <= 0:
+                transform = QTransform().translate(enemy_x, enemy_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.dead_enemy_texture.width() // 2, self.dead_enemy_texture.height() // 2,
+                                   self.dead_enemy_texture)
+            else:
+                transform = QTransform().translate(enemy_x, enemy_y)
+                painter.setTransform(transform)
+                painter.drawPixmap(self.enemy_texture.width() // 2, self.enemy_texture.height() // 2,
+                                   self.enemy_texture)
 
             # Малювання куль
             for bullet in self.bullets:
@@ -327,7 +341,7 @@ class GameWidget(QWidget):
             if event.key() == Qt.Key_Z:
                 self.health = self.health - 25
             if event.key() == Qt.Key_X:
-                self.enemy_health = self.enemy_health - 25
+                self.decrease_enemy_health(25)
                 print(self.enemy_health)
 
         except Exception as e:
@@ -425,6 +439,26 @@ class GameWidget(QWidget):
             if bullet.is_out_of_bounds():
                 self.bullets.remove(bullet)
 
+    def is_collide(self, hitbox1, hitbox2):
+        # Перевірка зіткнень між двома хітбоксами
+        # Повертає True, якщо виявлено зіткнення, інакше False
+        player_x = hitbox1[0]
+        player_y = hitbox1[1]
+        enemy_x = hitbox2[0]
+        enemy_y = hitbox2[1]
+        player_width = hitbox1[2]
+        player_height = hitbox1[3]
+        enemy_width = hitbox2[2]
+        enemy_height = hitbox2[3]
+
+        if (player_x + player_width > enemy_x and
+                player_x < enemy_x + enemy_width and
+                player_y + player_height > enemy_y and
+                player_y < enemy_y + enemy_height):
+            return True
+        else:
+            return False
+
     def check_collision(self):
         # Перевірка зіткнень куль з ворогами
         bullets_copy = self.bullets[:]  # Копіюємо список куль
@@ -432,22 +466,25 @@ class GameWidget(QWidget):
             bullet_hitbox = self.get_bullet_hitbox(bullet.x, bullet.y)  # Отримуємо хітбокс кулі
             for enemy in self.enemies:
                 enemy_hitbox = self.get_enemy_hitbox(enemy.x, enemy.y)  # Отримуємо хітбокс ворога
-                if self.check_collision(bullet_hitbox, enemy_hitbox):  # Оновлений виклик функції
+                if self.is_collide(bullet_hitbox, enemy_hitbox):  # Оновлений виклик функції
                     self.bullets.remove(bullet)
                     self.decrease_enemy_health(25)
 
         # Перевірка зіткнень героя з ворогами
         player_hitbox = self.get_player_hitbox(self.player_x, self.player_y)  # Отримуємо хітбокс гравця
         for enemy in self.enemies:
-            enemy_hitbox = self.get_enemy_hitbox(enemy.x, enemy.y)  # Отримуємо хітбокс ворога
-            if self.check_collision(player_hitbox, enemy_hitbox):  # Оновлений виклик функції
+            enemy.x += enemy.speed_x  # Оновлення координат ворога по осі X
+            enemy.y += enemy.speed_y  # Оновлення координат ворога по осі Y
+            enemy_hitbox = self.get_enemy_hitbox(enemy.x, enemy.y)  # Отримуємо оновлений хітбокс ворога
+            if self.is_collide(player_hitbox, enemy_hitbox):  # Оновлений виклик функції
+                print('w')
                 self.decrease_health(random.randint(1, 10))  # Зменшуємо здоров'я гравця
                 self.decrease_enemy_health(random.randint(1, 10))  # Зменшуємо здоров'я ворога
 
         # Перевірка зіткнень героя з парканом
         for fence in self.fences:
-            fence_hitbox = self.get_enemy_hitbox(fence.x, fence.y)  # Отримуємо хітбокс паркану
-            if self.check_collision(player_hitbox, fence_hitbox):  # Оновлений виклик функції
+            fence_hitbox = self.get_fence_hitbox(fence.x, fence.y)  # Отримуємо хітбокс паркану
+            if self.is_collide(player_hitbox, fence_hitbox):  # Оновлений виклик функції
                 self.decrease_health(random.randint(5, 25))  # Зменшуємо здоров'я гравця
 
     def get_bullet_hitbox(self, bullet_x, bullet_y):
@@ -461,8 +498,9 @@ class GameWidget(QWidget):
         enemy_height = 32  # Висота ворога
         return enemy_x, enemy_y, enemy_width, enemy_height
 
-    def get_fence_hitbox(fence_x, fence_y):
+    def get_fence_hitbox(self, fence_x, fence_y):
         fence_width = 128  # Ширина паркану
         fence_height = 64  # Висота паркану
         return fence_x, fence_y, fence_width, fence_height
+
 
