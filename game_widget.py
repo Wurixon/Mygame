@@ -168,7 +168,7 @@ class GameWidget(QWidget):
             self.boxes.append(self.box)
             self.snipertower = Object(-400, 0, 96, 102)
             self.snipertowers.append(self.snipertower)
-            self.gazebo = Object(-512, 0, 128, 256)
+            self.gazebo = Object(-512, 50, 128, 256)
             self.gazeboes.append(self.gazebo)
 
         self.fireplace_textures = {
