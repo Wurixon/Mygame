@@ -80,13 +80,13 @@ class DeadEnemy:
         self.texture = texture
 
 class Object:
-    def __init__(self, x, y):
+    def __init__(self, x, y, height, width):
         self.x = x
         self.y = y
+        self.height = height
+        self.width = width
         self.current_x = x
         self.current_y = y
-        self.width = 128
-        self.height = 64
 
     def update(self, player_x, player_y):
         dx = player_x - self.x
@@ -158,16 +158,17 @@ class GameWidget(QWidget):
         for i in range(1,5):
             self.enemy = Enemy(i * 100, 100, 10)
             self.enemies.append(self.enemy)
-        for i in range(1):
-            self.fence = Object(100, -100)
+        for i in range(7):
+            self.fence = Object(i * -128, 128, 64, 128)
             self.fences.append(self.fence)
-            self.tent = Object(-100, -100)
+        for i in range(1):
+            self.tent = Object(300, -100, 128, 128)
             self.tents.append(self.tent)
-            self.box = Object(-100, -300)
+            self.box = Object(300, -300, 64, 64)
             self.boxes.append(self.box)
-            self.snipertower = Object(-100, -400)
+            self.snipertower = Object(300, -400, 96, 102)
             self.snipertowers.append(self.snipertower)
-            self.gazebo = Object(-100, -500)
+            self.gazebo = Object(300, -500, 128, 256)
             self.gazeboes.append(self.gazebo)
 
         self.fireplace_textures = {
@@ -318,8 +319,7 @@ class GameWidget(QWidget):
             for fence in self.fences:
                 transform = QTransform().translate(fence.current_x, fence.current_y)
                 painter.setTransform(transform)
-                painter.drawPixmap(self.fence_texture.width() // 2, self.fence_texture.height() // 2,
-                                    self.fence_texture)
+                painter.drawPixmap(fence.width // 2, fence.height // 2, self.fence_texture)
 
             # Малювання бесідки
             for gazebo in self.gazeboes:
@@ -497,10 +497,14 @@ class GameWidget(QWidget):
         # Повертає True, якщо виявлено зіткнення, інакше False
         player_x = hitbox1[0]
         player_y = hitbox1[1]
+        fence_x = hitbox2[0]
+        fence_y = hitbox2[1]
         enemy_x = hitbox2[0]
         enemy_y = hitbox2[1]
         player_width = hitbox1[2]
         player_height = hitbox1[3]
+        fence_width = hitbox2[2]
+        fence_height = hitbox2[3]
         enemy_width = hitbox2[2]
         enemy_height = hitbox2[3]
 
@@ -508,6 +512,11 @@ class GameWidget(QWidget):
             player_x + player_width > enemy_x and
             player_y -32 < enemy_y + enemy_height and
             player_y + player_height > enemy_y):
+            return True
+        elif(player_x -32 < fence_x + fence_width and
+            player_x + player_width > fence_x and
+            player_y -32 < fence_y + fence_height and
+            player_y + player_height > fence_y):
             return True
         else:
             return False
