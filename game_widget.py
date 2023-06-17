@@ -162,13 +162,13 @@ class GameWidget(QWidget):
             self.fence = Object(i * -128, 128, 64, 128)
             self.fences.append(self.fence)
         for i in range(1):
-            self.tent = Object(300, -100, 128, 128)
+            self.tent = Object(-200, 50, 128, 128)
             self.tents.append(self.tent)
-            self.box = Object(300, -300, 64, 64)
+            self.box = Object(-128, 0, 64, 64)
             self.boxes.append(self.box)
-            self.snipertower = Object(300, -400, 96, 102)
+            self.snipertower = Object(-400, 0, 96, 102)
             self.snipertowers.append(self.snipertower)
-            self.gazebo = Object(300, -500, 128, 256)
+            self.gazebo = Object(-512, 0, 128, 256)
             self.gazeboes.append(self.gazebo)
 
         self.fireplace_textures = {
